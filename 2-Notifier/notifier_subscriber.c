@@ -7,8 +7,9 @@
 
 MODULE_LICENSE("GPL");
 
+// 取得 notify 的內容
 static int notify_sys(struct notifier_block *this, unsigned long code, void *data) {
-	printk("%s(): code=%ld, msg=\"%s\"\n", __FUNCTION__, code, (char*) data);
+	printk("I am subscriber, %s(): code=%ld, msg=\"%s\"\n", __FUNCTION__, code, (char*) data);
 
 	return 0;
 }
@@ -18,13 +19,13 @@ static struct notifier_block notifier = {
 };
 
 static int __init init_modules(void) {
-	register_notifier(&notifier);
+	register_jack_notifier(&notifier);
 
 	return 0;
 }
 
 static void __exit exit_modules(void) {
-	unregister_notifier(&notifier);
+	unregister_jack_notifier(&notifier);
 }
 
 module_init(init_modules);

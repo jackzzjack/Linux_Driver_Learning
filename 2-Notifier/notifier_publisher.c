@@ -14,20 +14,20 @@ MODULE_LICENSE("GPL");
 BLOCKING_NOTIFIER_HEAD(notifier_list);
 
 // 訂閱 notifier_list 事件的 wrapper function
-int register_notifier(struct notifier_block *nb) {
+int register_jack_notifier(struct notifier_block *nb) {
     return blocking_notifier_chain_register(&notifier_list, nb);
 }
-EXPORT_SYMBOL(register_notifier);
+EXPORT_SYMBOL(register_jack_notifier);
 
 // 取消訂閱 notifier_list 事件的 wrapper function
-int unregister_notifier(struct notifier_block *nb) {
+int unregister_jack_notifier(struct notifier_block *nb) {
     return blocking_notifier_chain_unregister(&notifier_list, nb);
 }
-EXPORT_SYMBOL(unregister_notifier);
+EXPORT_SYMBOL(unregister_jack_notifier);
 
 // procfs 的 write function
 static int write_proc(struct file *filp, const char __user *buf,
-                               unsigned long count, void *data) {
+                      unsigned long count, void *data) {
     char *p = (char *) kzalloc(sizeof(char) * count, GFP_KERNEL);
     if (!p) {
         printk("no mem\n");
@@ -37,7 +37,7 @@ static int write_proc(struct file *filp, const char __user *buf,
         printk("fault\n");
         return -EFAULT;
     }
-    printk("%s(): msg=\"%s\"\n", __FUNCTION__, p);
+    printk("I am publisher, %s(): msg=\"%s\"\n", __FUNCTION__, p);
 
     // 將事件 published 給 notifier_list 的 subscriber
     blocking_notifier_call_chain(&notifier_list, num1, (void*)p);
@@ -55,10 +55,14 @@ static int __init init_modules(void) {
 /* create_proc_entry 在新版的 Kernel 已不被支援
  * 取而代之的是 proc_create，差異在再新增了第四個參數
  */
+ /* S_IFREG: regular file
+  * S_IWUSR: owner has write permission
+  */
     ent = proc_create("notifier", S_IFREG | S_IWUSR, NULL, &test_fops);
     if (ent == NULL)
-	return -ENOMEM;
+	   return -ENOMEM;
 
+    // 注意 printk 的優先權是會影響 print 會不會出現 和 速率的
     printk("Init notifier.");
 
     return 0;
