@@ -1,0 +1,11 @@
+sudo tc qdisc del dev eth1 root
+sudo tc qdisc add dev eth1 root handle 1: htb
+sudo tc class add dev eth1 parent 1:0 classid 1:10 htb rate 100Mbit
+sudo tc class add dev eth1 parent 1:10 classid 1:20 htb rate 1Mbit
+sudo tc class add dev eth1 parent 1:20 classid 1:100 htb rate 128Kbit ceil 1Mbit
+sudo tc qdisc add dev eth1 parent 1:100 sfq quantum 1514b perturb 15
+sudo tc filter add dev eth1 protocol ip parent 1:0 prio 4 u32 match ip dst 192.168.152.129 flowid 1:100
+#------
+sudo tc class add dev eth1 parent 1:20 classid 1:400 htb rate 256Kbit ceil 1Mbit
+sudo tc qdisc add dev eth1 parent 1:400 sfq quantum 1514 perturb 15
+sudo tc filter add dev eth1 protocol ip parent 1:0 prio 5 u32 match ip dst 192.168.152.0/24 flowid 1:400
